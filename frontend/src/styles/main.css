@@ -1,0 +1,275 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f7fa;
+    color: #333;
+  }
+  
+  .app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  .header {
+    background-color: #1a73e8;
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+  }
+  
+  .header-actions {
+    font-size: 1rem;
+    font-weight: 500;
+  }
+  
+  .content {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .data-management {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  
+  .data-management > div {
+    flex: 1;
+    min-width: 300px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+  }
+  
+  .product-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .product-list {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+  }
+  
+  .enrichment-panel {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+  }
+  
+  h2 {
+    margin-top: 0;
+    color: #1a73e8;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Filters */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .filter-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 150px;
+    flex: 1;
+  }
+  
+  .filter-field label {
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+    color: #555;
+  }
+  
+  .filter-field input {
+    padding: 0.6rem;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+  
+  /* Product Table */
+  .product-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+  }
+  
+  .product-table th, 
+  .product-table td {
+    padding: 0.8rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .product-table th {
+    background-color: #f5f7fa;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .product-table th:hover {
+    background-color: #e8edf3;
+  }
+  
+  .sort-asc::after {
+    content: "▲";
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .sort-desc::after {
+    content: "▼";
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .product-table tr.selected {
+    background-color: #e8f0fe;
+  }
+  
+  .no-data {
+    text-align: center;
+    color: #888;
+    padding: 3rem !important;
+  }
+  
+  /* Pagination */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .pagination button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #d0d0d0;
+    background-color: white;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .pagination button:hover {
+    background-color: #f5f7fa;
+  }
+  
+  .pagination button.active {
+    background-color: #1a73e8;
+    color: white;
+    border-color: #1a73e8;
+  }
+  
+  .pagination button:disabled {
+    cursor: not-allowed;
+    color: #aaa;
+    background-color: #f5f5f5;
+  }
+  
+  /* File Upload */
+  .upload-container {
+    margin-bottom: 1.5rem;
+  }
+  
+  .file-input {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+  }
+  
+  .file-label {
+    display: inline-block;
+    padding: 0.7rem 1.5rem;
+    background-color: #1a73e8;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 1rem;
+  }
+  
+  .file-label:hover {
+    background-color: #1565c0;
+  }
+  
+  .file-info {
+    display: inline-block;
+    margin-bottom: 1rem;
+    color: #555;
+  }
+  
+  .import-button, 
+  .enrich-button {
+    padding: 0.7rem 1.5rem;
+    background-color: #34a853;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    display: block;
+    margin-top: 1rem;
+  }
+  
+  .import-button:hover,
+  .enrich-button:hover {
+    background-color: #2e8b47;
+  }
+  
+  .import-button:disabled,
+  .enrich-button:disabled {
+    background-color: #a0a0a0;
+    cursor: not-allowed;
+  }
+  
+  .error-message {
+    background-color: #fdecea;
+    color: #d93025;
+    padding: 1rem;
+    border-radius: 4px;
+    margin: 1rem 0;
+  }
+  
+  .success-message {
+    background-color: #e6f4ea;
+    color: #137333;
+    padding: 1rem;
+    border-radius: 4px;
+    margin: 1rem 0;
+  }
+  
+  /* Progress Bar */
+  .progress-container {
+    margin: 1.5rem 0;
+  }
+  
+  .progress-bar {
+    height: 10px;
+    background-color: #f1f1f1;
+  }
