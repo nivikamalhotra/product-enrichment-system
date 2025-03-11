@@ -29,10 +29,10 @@ Project Structure
 * Getting Started
 1. Set up environment variables in .env:
 
-MONGODB_URI=your_mongodb_connection_string
-PORT=3001
-OPENAI_API_KEY=your_openai_api_key
-ANTHROPIC_API_KEY=your_anthropic_api_key
+a. MONGODB_URI=your_mongodb_connection_string
+b.  PORT=3001
+c.  OPENAI_API_KEY=your_openai_api_key
+d. ANTHROPIC_API_KEY=your_anthropic_api_key
 
 2. Install dependencies: npm install
 3. Start the server: npm run dev
