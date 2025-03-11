@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Product Management System with AI Enrichment
+This application is a scalable product management system designed to import customer SKU data and enrich it with AI-generated product information.
 
-## Getting Started
+# Overview
+The system allows users to:
+* Import product data from CSV/Excel files
+* Define custom product attributes of various types
+* View and manage products with pagination, sorting, and filtering
+* Enrich product data using AI to automatically fill in missing information
 
-First, run the development server:
+# Backend
+Project Structure
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+* Controllers: Handle API routes and business logic
+1. attributeController.js: Manages product attributes (CRUD operations)
+2. enrichmentController.js: Handles AI enrichment of product data
+3. productController.js: Manages product data operations (search, import, update)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+* Models: Define data schemas
+1. attributeModel.js: Schema for product attributes
+2. productModel.js: Schema for product data with dynamic attributes
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+* Middleware: upload.js: Handles file uploads and parsing for product imports
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* Services: aiService.js: Integration with OpenAI and Anthropic APIs for data enrichment
 
-## Learn More
+* Main Application: index.js: Express app configuration and server setup
 
-To learn more about Next.js, take a look at the following resources:
+* Getting Started
+1. Set up environment variables in .env:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+MONGODB_URI=your_mongodb_connection_string
+PORT=3001
+OPENAI_API_KEY=your_openai_api_key
+ANTHROPIC_API_KEY=your_anthropic_api_key
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. Install dependencies: npm install
+3. Start the server: npm run dev
+4. Access the API at http://localhost:3001
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Frontend
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+* Overview
+
+Import product data from CSV and Excel files
+Manage custom product attributes
+View and filter product listings
+Enrich product data using AI to automatically generate descriptions, specifications, and categorizations
+
+* Set up environment variable in .env
+REACT_APP_API_URL=http://localhost:3001/api
+
+* Start the development server
+npm start
+
+The application will be available at http://localhost:3000.
+
+# API Services
+The application communicates with the backend through the following API endpoints:
+
+/api/attributes - CRUD operations for product attributes
+/api/products - Retrieve and manage products
+/api/products/import - Import products from files
+/api/products/enrich - Enrich product data with AI
