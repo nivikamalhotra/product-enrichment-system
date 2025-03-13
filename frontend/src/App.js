@@ -13,6 +13,7 @@ function App() {
   const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showAttributeModal, setShowAttributeModal] = useState(false);
 
   useEffect(() => {
     const loadAttributes = async () => {
@@ -32,11 +33,8 @@ function App() {
 
   const handleProductImport = (importedProducts) => {
     setProducts((prevProducts) => {
-      // Filter out duplicates based on barcode
       const existingBarcodes = new Set(prevProducts.map(p => p.barcode));
       const newProducts = importedProducts.filter(p => !existingBarcodes.has(p.barcode));
-      
-      // Merge the new products with existing ones
       return [...prevProducts, ...newProducts];
     });
   };
@@ -92,6 +90,7 @@ function App() {
               <AttributeManager 
                 attributes={attributes}
                 onUpdate={handleAttributeUpdate}
+                onShowModal={() => setShowAttributeModal(true)}
               />
             } />
           </Routes>

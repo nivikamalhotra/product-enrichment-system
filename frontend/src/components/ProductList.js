@@ -253,6 +253,7 @@ function ProductList({ attributes, onProductSelect }) {
           >
             + Add Product
           </button>
+          <button className="action-btn primary-btn" onClick={() => window.location.href = '/attributes'}>Manage Attributes</button>
           <button
             className="action-btn primary-btn"
             onClick={() => window.location.href = '/import'}
