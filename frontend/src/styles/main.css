@@ -784,3 +784,84 @@
 .save-btn:hover {
   background: #2e7d32;
 }
+
+.add-btn, .back-btn {
+  padding: 8px 12px;
+  margin: 5px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+.add-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.back-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.add-btn:hover, .back-btn:hover {
+  opacity: 0.8;
+}
+
+.modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 5px;
+  width: 350px;
+  text-align: center;
+}
+
+.modal-actions {
+  margin-top: 10px;
+}
+
+.save-btn {
+  background: #007bff;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.close-btn {
+  background: #ccc;
+  color: black;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.delete-btn {
+  background: #dc3545;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
