@@ -1,101 +1,148 @@
 import React, { useState } from 'react';
 import { enrichProducts } from '../services/api';
 
-function EnrichmentPanel({ selectedProducts, attributes, onEnrichment }) {
+function EnrichmentPanel({ selectedProducts, attributes, onEnrich }) {
   const [isEnriching, setIsEnriching] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [error, setError] = useState(null);
+  const [selectedAttributes, setSelectedAttributes] = useState(
+    attributes.map(attr => attr.id || attr._id)
+  );
 
-  const handleEnrichment = async () => {
-    if (selectedProducts.length === 0) {
-      setError("Please select products to enrich");
+  const handleAttributeToggle = (attributeId) => {
+    setSelectedAttributes(prev => {
+      if (prev.includes(attributeId)) {
+        return prev.filter(id => id !== attributeId);
+      } else {
+        return [...prev, attributeId];
+      }
+    });
+  };
+
+  const handleEnrichAll = async () => {
+    if (selectedProducts.length === 0 || selectedAttributes.length === 0) {
       return;
     }
-
+    
     setIsEnriching(true);
-    setError(null);
     setProgress(0);
-
+    
     try {
-      // For large product sets, simulate progress updates
-      const totalProducts = selectedProducts.length;
+      // Get the attribute keys for the selected attribute IDs
+      const attributeKeys = attributes
+        .filter(attr => selectedAttributes.includes(attr.id || attr._id))
+        .map(attr => attr.key);
       
-      if (totalProducts > 10) {
-        const progressInterval = setInterval(() => {
-          setProgress(prev => {
-            if (prev >= 90) {
-              clearInterval(progressInterval);
-              return 90;
-            }
-            return prev + 10;
-          });
-        }, 500);
-      }
-
+      // Get the product IDs
       const productIds = selectedProducts.map(product => product.id);
-      const attributeKeys = attributes.map(attr => attr.key);
       
+      // Mock progress updates
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          const newProgress = prev + Math.random() * 10;
+          return newProgress > 90 ? 90 : newProgress;
+        });
+      }, 500);
+      
+      // Call the enrichment API
       const enrichedProducts = await enrichProducts(productIds, attributeKeys);
       
+      // Clear interval and set to 100%
+      clearInterval(progressInterval);
       setProgress(100);
-      onEnrichment(enrichedProducts);
+      
+      // Notify parent component
+      onEnrich(enrichedProducts);
+      
+      // Wait a moment to show 100% completion
+      setTimeout(() => {
+        setIsEnriching(false);
+        setProgress(0);
+      }, 1000);
       
     } catch (error) {
-      console.error('Enrichment error:', error);
-      setError(error.message || 'Failed to enrich products');
-    } finally {
+      console.error('Enrichment failed:', error);
       setIsEnriching(false);
     }
   };
 
   return (
     <div className="enrichment-panel">
-      <h2>AI Enrichment</h2>
+      <div className="enrichment-header">
+        <h3>Enrich {selectedProducts.length} Selected Products</h3>
+        <button className="close-panel" onClick={() => onEnrich([])}>×</button>
+      </div>
       
-      {selectedProducts.length > 0 ? (
-        <div className="enrichment-info">
-          <p>{selectedProducts.length} products selected for enrichment</p>
-          <p>Attributes to be enriched: {attributes.length}</p>
+      <div className="attributes-selection">
+        <h4>Select Attributes to Enrich:</h4>
+        <div className="attributes-list">
+          <div className="attribute-item">
+            <input
+              type="checkbox"
+              id="select-all"
+              checked={selectedAttributes.length === attributes.length}
+              onChange={() => {
+                if (selectedAttributes.length === attributes.length) {
+                  setSelectedAttributes([]);
+                } else {
+                  setSelectedAttributes(attributes.map(attr => attr.id || attr._id));
+                }
+              }}
+            />
+            <label htmlFor="select-all">Select All</label>
+          </div>
+          
+          {attributes.map(attr => (
+            <div key={attr.id || attr._id} className="attribute-item">
+              <input
+                type="checkbox"
+                id={`attr-${attr.id || attr._id}`}
+                checked={selectedAttributes.includes(attr.id || attr._id)}
+                onChange={() => handleAttributeToggle(attr.id || attr._id)}
+              />
+              <label htmlFor={`attr-${attr.id || attr._id}`}>{attr.name}</label>
+            </div>
+          ))}
         </div>
-      ) : (
-        <div className="enrichment-info">
-          <p>No products selected for enrichment</p>
-          <p>Select products from the list to enable enrichment</p>
-        </div>
-      )}
-      
-      <button
-        className="enrich-button"
-        disabled={selectedProducts.length === 0 || isEnriching}
-        onClick={handleEnrichment}
-      >
-        {isEnriching ? 'Enriching...' : 'Enrich Selected Products'}
-      </button>
+      </div>
       
       {isEnriching && (
-        <div className="progress-container">
+        <div className="enrichment-progress">
           <div className="progress-bar">
-            <div 
-              className="progress-fill" 
+            <div
+              className="progress-fill"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
-          <div className="progress-text">{Math.round(progress)}%</div>
+          <div className="progress-text">
+            {progress < 100 ? 'Enriching...' : 'Completed!'}
+            {Math.round(progress)}%
+          </div>
         </div>
       )}
       
-      {error && <div className="error-message">{error}</div>}
+      <div className="enrichment-actions">
+        <button
+          className="cancel-btn"
+          onClick={() => onEnrich([])}
+          disabled={isEnriching}
+        >
+          Cancel
+        </button>
+        <button
+          className="enrich-all-btn"
+          onClick={handleEnrichAll}
+          disabled={isEnriching || selectedAttributes.length === 0}
+        >
+          {isEnriching ? 'Processing...' : 'Enrich Selected Attributes'}
+        </button>
+      </div>
       
-      <div className="enrichment-info">
-        <h3>How AI Enrichment Works</h3>
-        <p>Our system uses advanced AI to analyze your product data and enrich it with detailed attributes:</p>
-        <ul>
-          <li>Product descriptions and features are generated from the product name and brand</li>
-          <li>Technical specifications are extracted from available information</li>
-          <li>Categories and tags are assigned based on product analysis</li>
-          <li>Units and measurements are standardized</li>
-        </ul>
-        <p>The enrichment process can take a few seconds to a few minutes depending on the number of products.</p>
+      <div className="enrichment-note">
+        <p>
+          <strong>Note:</strong> The AI will attempt to enrich the selected attributes 
+          using product name, brand, and barcode information. Enrichment quality
+          depends on the specificity of the product information.
+        </p>
       </div>
     </div>
   );

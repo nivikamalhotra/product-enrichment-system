@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { importProducts } from '../services/api';
 
 function ImportData({ onImport }) {
@@ -6,6 +7,7 @@ function ImportData({ onImport }) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const fileInputRef = useRef(null);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -15,7 +17,10 @@ function ImportData({ onImport }) {
   };
 
   const validateFile = (file) => {
-    if (!file) return false;
+    if (!file) {
+      setError('Please select a file to import.');
+      return false;
+    }
     
     const validExtensions = ['.csv', '.xlsx', '.xls'];
     const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
@@ -46,8 +51,9 @@ function ImportData({ onImport }) {
       setFile(null);
       
       // Reset file input
-      const fileInput = document.getElementById('file-upload');
-      if (fileInput) fileInput.value = '';
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       
     } catch (error) {
       console.error('Import error:', error);
@@ -58,26 +64,24 @@ function ImportData({ onImport }) {
   };
 
   return (
-    <div className="import-data">
-      <h2>Import Products</h2>
-      <div className="upload-container">
+    <div className="import-container">
+      <div className="import-header">
+        <h2>Import Products</h2>
+        <Link to="/" className="back-button">← Back to Products</Link>
+      </div>
+      
+      <div className="upload-box">
         <input
           type="file"
           id="file-upload"
+          ref={fileInputRef}
           accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
           onChange={handleFileChange}
           className="file-input"
         />
         <label htmlFor="file-upload" className="file-label">
-          Choose CSV or Excel File
+          {file ? file.name : 'Choose a CSV or Excel File'}
         </label>
-        <div className="file-info">
-          {file ? (
-            <span>{file.name}</span>
-          ) : (
-            <span>No file selected</span>
-          )}
-        </div>
         <button 
           onClick={handleImport} 
           disabled={!file || isUploading}
@@ -91,15 +95,14 @@ function ImportData({ onImport }) {
       {success && <div className="success-message">{success}</div>}
       
       <div className="import-instructions">
-        <h3>Import Instructions</h3>
-        <p>The file should contain the following columns:</p>
+        <h3>Instructions</h3>
+        <p>Ensure your file follows the correct format:</p>
         <ul>
-          <li>name - Product name (required)</li>
-          <li>brand - Product brand (required)</li>
-          <li>barcode - Product barcode (required)</li>
-          <li>imageUrl - Product image URL (optional)</li>
+          <li><strong>Name</strong> - Product name (required)</li>
+          <li><strong>Brand</strong> - Product brand (required)</li>
+          <li><strong>Barcode</strong> - Unique product barcode (required)</li>
+          <li><strong>Image URL</strong> - Link to product image (optional)</li>
         </ul>
-        <p>CSV columns should be separated by commas. Excel files should have these columns in the first sheet.</p>
       </div>
     </div>
   );
