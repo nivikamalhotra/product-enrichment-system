@@ -111,24 +111,16 @@ export const importProducts = async (formData) => {
 };
 
 // Enrich products with AI
-export const enrichProducts = async (productIds, attributeKeys) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/products/enrich`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ productIds, attributeKeys }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `API error: ${response.status}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error enriching products:', error);
-    throw error;
+export const enrichProductsWithAI = async (products) => {
+  const response = await fetch('/api/enrich', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ products }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to enrich products');
   }
+
+  return await response.json();
 };

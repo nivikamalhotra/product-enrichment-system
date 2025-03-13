@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProducts, enrichProducts } from '../services/api';
+import { fetchProducts, enrichProductsWithAI } from '../services/api';
 
 function ProductList({ attributes, onProductSelect }) {
   const [products, setProducts] = useState([]);
@@ -200,7 +200,7 @@ function ProductList({ attributes, onProductSelect }) {
 
       // Call the enrichment API
       const productIds = selectedProducts.map(p => p.id);
-      const enrichedProducts = await enrichProducts(productIds, attributeKeys);
+      const enrichedProducts = await enrichProductsWithAI(productIds, attributeKeys);
 
       // Update the products state with enriched data
       setProducts(prevProducts => {

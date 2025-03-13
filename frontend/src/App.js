@@ -4,8 +4,7 @@ import Header from './components/Header';
 import ProductList from './components/ProductList';
 import AttributeManager from './components/AttributeManager';
 import ImportData from './components/ImportData';
-import EnrichmentPanel from './components/EnrichmentPanel';
-import { fetchAttributes } from './services/api';
+import { fetchAttributes, enrichProductsWithAI } from './services/api';
 import './styles/main.css';
 
 function App() {
@@ -27,7 +26,7 @@ function App() {
         setIsLoading(false);
       }
     };
-    
+
     loadAttributes();
   }, []);
 
@@ -57,6 +56,19 @@ function App() {
     setSelectedProducts([]);
   };
 
+  // New function: Handle AI enrichment
+  const handleEnrichWithAI = async () => {
+    try {
+      setIsLoading(true);
+      const enrichedProducts = await enrichProductsWithAI(selectedProducts);
+      handleProductEnrichment(enrichedProducts);
+    } catch (error) {
+      console.error('Error enriching products:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Router>
       <div className="app">
@@ -72,12 +84,13 @@ function App() {
                     onProductSelect={handleProductSelect}
                   />
                   {selectedProducts.length > 0 && (
-                    <EnrichmentPanel 
-                      selectedProducts={selectedProducts}
-                      attributes={attributes}
-                      onEnrich={handleProductEnrichment}
-                    />
-                  )}
+  <div className="enrichment-panel">
+    <button className="enrich-btn" onClick={handleEnrichWithAI} disabled={isLoading}>
+      {isLoading ? 'Enriching...' : 'Enrich with AI'}
+    </button>
+    {isLoading && <p>Loading...</p>}
+  </div>
+)}
                 </section>
               </>
             } />
