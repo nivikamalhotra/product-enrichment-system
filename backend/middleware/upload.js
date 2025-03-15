@@ -3,6 +3,25 @@ const path = require('path');
 const xlsx = require('xlsx');
 const fs = require('fs');
 
+const uploadDir = "uploads/image/";
+
+// Ensure the directory exists
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Multer image storage config
+const imageStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir); 
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+
+const uploadImage = multer({ storage: imageStorage });
+
 // Configure storage
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
@@ -57,5 +76,6 @@ const parseFile = (filePath) => {
 
 module.exports = {
   upload,
-  parseFile
+  parseFile,
+  uploadImage
 };

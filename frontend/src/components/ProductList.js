@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { fetchProducts, addProduct, deleteProduct } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+const host = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function ProductList({ attributes, onProductSelect }) {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -24,8 +27,6 @@ function ProductList({ attributes, onProductSelect }) {
     category: '',
     price: ''
   });
-  const [selectedCategory, setSelectedCategory] = useState("");
-
 
   useEffect(() => {
     loadProducts();
@@ -160,12 +161,6 @@ function ProductList({ attributes, onProductSelect }) {
     });
   };
 
-
-  const handleEditProduct = (product) => {
-    console.log("Edit Product:", product);
-    // TODO: Open Edit Modal or Navigate to Edit Page
-  };
-
   const handleDeleteProduct = async (productId) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
 
@@ -177,12 +172,6 @@ function ProductList({ attributes, onProductSelect }) {
       console.error("Failed to delete product:", error);
     }
   };
-
-  const handleViewProduct = (product) => {
-    console.log("View Product:", product);
-    // TODO: Open a Modal or Navigate to Product Details Page
-  };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent page refresh
@@ -362,8 +351,8 @@ function ProductList({ attributes, onProductSelect }) {
 
               <label>Category</label>
               <select
-                value={newProduct.category}  
-                onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })} 
+                value={newProduct.category}
+                onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
               >
                 <option value="">Select Category</option>
                 {categoryOptions.map((category, index) => (
@@ -385,7 +374,6 @@ function ProductList({ attributes, onProductSelect }) {
           </div>
         </div>
       )}
-
 
       {/* Filters */}
       {showFilters && (
@@ -498,6 +486,7 @@ function ProductList({ attributes, onProductSelect }) {
                       checked={selectedProducts.length === currentProducts.length && currentProducts.length > 0}
                     />
                   </th>
+                  <th>Image</th>
                   <th
                     onClick={() => handleSort('name')}
                     className={sortField === 'name' ? `sort-${sortDirection}` : ''}
@@ -531,6 +520,15 @@ function ProductList({ attributes, onProductSelect }) {
                   >
                     Category
                     {sortField === 'category' && (
+                      <span className="sort-icon">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                    )}
+                  </th>
+                  <th
+                    onClick={() => handleSort('price')}
+                    className={sortField === 'price' ? `sort-${sortDirection}` : ''}
+                  >
+                    Price
+                    {sortField === 'price' && (
                       <span className="sort-icon">{sortDirection === 'asc' ? '▲' : '▼'}</span>
                     )}
                   </th>
@@ -583,6 +581,16 @@ function ProductList({ attributes, onProductSelect }) {
                           onChange={(e) => handleSelectProduct(product, e.target.checked)}
                         />
                       </td>
+                      <td>
+                        {product.images && product.images.length > 0 ? (
+                          <img
+                            src={`${host}/${product.images[0]}`} // Adjust this path if needed
+                            alt="Product"
+                            className="product-list-image"
+                          />
+                        ) : (
+                          <span>No Image</span> // Show a placeholder if no image exists
+                        )}</td>
                       <td>{product.name}</td>
                       <td>{product.brand}</td>
                       <td>
@@ -591,6 +599,7 @@ function ProductList({ attributes, onProductSelect }) {
                         </span>
                       </td>
                       <td>{product.category || 'N/A'}</td>
+                      <td>{product.price || '-'}</td>
                       <td>
                         <span className={`status-badge enrichment-${(product.enrichmentStatus || 'pending').toLowerCase().replace(/\s+/g, '-')}`}>
                           {product.enrichmentStatus || 'Pending'}
@@ -603,9 +612,9 @@ function ProductList({ attributes, onProductSelect }) {
                         </td>
                       ))}
                       <td>
-                        <button className="edit-btn" onClick={() => handleEditProduct(product)}>✏️ Edit</button>
+                        <button className="edit-btn" onClick={() => navigate(`/edit-product/${product._id}`)}>✏️ Edit</button>
                         <button className="delete-btn" onClick={() => handleDeleteProduct(product._id)}>🗑️ Delete</button>
-                        <button className="view-btn" onClick={() => handleViewProduct(product)}>👁 View</button>
+                        <button className="view-btn" onClick={() => navigate(`/product/${product._id}`)}>👁 View</button>
                       </td>
                     </tr>
                   ))

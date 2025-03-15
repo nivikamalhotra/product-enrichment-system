@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const path = require("path");
 
 const attributeRoutes = require('./controllers/attributeController');
 const enrichmentRoutes = require('./controllers/enrichmentController');
@@ -28,6 +29,7 @@ mongoose.connect(process.env.MONGODB_URI)
 app.use('/api/products', productRoutes);
 app.use('/api/attributes', attributeRoutes);
 app.use('/api/enrichment', enrichmentRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
