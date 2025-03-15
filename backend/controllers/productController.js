@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/productModel');
-const { upload, parseFile } = require('../middleware/upload');
+const { upload, parseFile, uploadImage } = require('../middleware/upload');
 
 // Get all products with pagination, sorting, and filters
 router.get('/', async (req, res) => {
@@ -9,12 +9,12 @@ router.get('/', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    
+
     // Sorting
     const sortField = req.query.sort || 'createdAt';
     const sortOrder = req.query.order === 'asc' ? 1 : -1;
     const sort = { [sortField]: sortOrder };
-    
+
     // Filters
     const filter = {};
     Object.keys(req.query).forEach(key => {
@@ -55,10 +55,27 @@ router.post('/import', upload.single('file'), async (req, res) => {
   }
 });
 
-// Update a product
-router.put('/:id', async (req, res) => {
+// Get a product
+router.get('/:id', async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update product' });
+  }
+});
+
+// Update a product
+router.put('/:id', uploadImage.single("image"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedData = req.body;
+    // If images are uploaded, save file paths
+    if (req?.file) {
+      updatedData.images = [`uploads/image/${req.file.filename}`];
+    }
+    const product = await Product.findByIdAndUpdate(id, updatedData, { new: true });
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (error) {

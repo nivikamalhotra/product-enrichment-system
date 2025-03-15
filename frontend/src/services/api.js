@@ -1,10 +1,17 @@
-const API_URL = 'http://localhost:3001/api/products';
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_URL = `${process.env.REACT_APP_API_URL}/api/products` || 'http://localhost:3001/api/products';
+const API_BASE_URL = `${process.env.REACT_APP_API_URL}/api` || 'http://localhost:3001/api';
 
 
 export const fetchProducts = async (queryParams = '') => {
+  console.log('API_URL:', API_URL);
   const response = await fetch(`${API_URL}?${queryParams}`);
   if (!response.ok) throw new Error('Failed to fetch products');
+  return response.json();
+};
+
+export const fetchProductById = async (productId) => {
+  const response = await fetch(`${API_URL}/${productId}`);
+  if (!response.ok) throw new Error("Failed to fetch product");
   return response.json();
 };
 
@@ -17,16 +24,6 @@ export const importProducts = async (formData) => {
   return response.json();
 };
 
-export const updateProduct = async (id, productData) => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(productData)
-  });
-  if (!response.ok) throw new Error('Failed to update product');
-  return response.json();
-};
-
 export const deleteProduct = async (id) => {
   const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
   if (!response.ok) throw new Error('Failed to delete product');
@@ -34,6 +31,7 @@ export const deleteProduct = async (id) => {
 };
 
 export const addProduct = async (productData) => {
+  console.log('API_URL:', API_URL);
   const response = await fetch(`${API_URL}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

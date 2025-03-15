@@ -4,6 +4,8 @@ import Header from './components/Header';
 import ProductList from './components/ProductList';
 import AttributeManager from './components/AttributeManager';
 import ImportData from './components/ImportData';
+import EditProduct from "./components/EditProduct";
+import ProductDetail from "./components/ProductDetail";
 import { fetchAttributes, enrichProductsWithAI } from './services/api';
 import './styles/main.css';
 
@@ -106,6 +108,10 @@ function App() {
                 onShowModal={() => setShowAttributeModal(true)}
               />
             } />
+
+            <Route path="/edit-product/:id" element={<EditProduct />} />
+
+            <Route path="/product/:id" element={<ProductDetail />} />
           </Routes>
         </main>
       </div>

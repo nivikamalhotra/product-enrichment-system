@@ -838,6 +838,15 @@
   cursor: pointer;
 }
 
+.edit-back-btn {
+  background: #007bff;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 90%;
+}
+
 .close-btn {
   background: #ccc;
   color: black;
@@ -923,3 +932,141 @@ button {
   color: white;
   border: none;
 }
+
+.edit-product-container {
+  width: 80%;
+  margin: auto;
+  padding: 10px;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.edit-product-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.edit-product-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+.edit-product-table label {
+  font-weight: bold;
+}
+
+input, select {
+  width: 95%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #9e9b9b;
+  border-radius: 5px;
+}
+
+.image-preview img {
+  width: 80px;
+  height: 80px;
+  margin-top: 10px;
+  border-radius: 5px;
+}
+
+.save-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  background-color: #6c757d;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.product-list-image {
+  width: 50px; /* Adjust size */
+  height: 50px;
+  object-fit: cover; /* Ensure proper aspect ratio */
+  border-radius: 5px;
+  display: block;
+}
+
+.product-detail-container {
+  max-width: 800px;
+  margin: 30px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.back-btn {
+  display: inline-block;
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.product-image-section {
+  width: 250px;
+  height: 250px;
+  margin-bottom: 20px;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.no-image {
+  width: 100%;
+  height: 100%;
+  background: #f3f3f3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  border-radius: 5px;
+}
+
+.product-info-section {
+  text-align: left;
+}
+
+.product-info-section h2 {
+  color: #333;
+}
+
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.status-badge.active { background-color: #28a745; color: white; }
+.status-badge.draft { background-color: #ffc107; color: black; }
+.status-badge.archived { background-color: #dc3545; color: white; }
