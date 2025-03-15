@@ -550,7 +550,7 @@ function ProductList({ attributes, onProductSelect }) {
                       <span className="sort-icon">{sortDirection === 'asc' ? '▲' : '▼'}</span>
                     )}
                   </th>
-                  {attributes.map(attr => (
+                  {/* {attributes.map(attr => (
                     <th
                       key={attr.id || attr._id}
                       onClick={() => handleSort(attr.key)}
@@ -561,7 +561,7 @@ function ProductList({ attributes, onProductSelect }) {
                         <span className="sort-icon">{sortDirection === 'asc' ? '▲' : '▼'}</span>
                       )}
                     </th>
-                  ))}
+                  ))} */}
                 </tr>
               </thead>
               <tbody>
@@ -606,11 +606,11 @@ function ProductList({ attributes, onProductSelect }) {
                         </span>
                       </td>
                       <td>{product.barcode}</td>
-                      {attributes.map(attr => (
+                      {/* {attributes.map(attr => (
                         <td key={`${product._id}-${attr.id || attr._id}`}>
                           {renderAttributeValue(product[attr.key], attr.type)}
                         </td>
-                      ))}
+                      ))} */}
                       <td>
                         <button className="edit-btn" onClick={() => navigate(`/edit-product/${product._id}`)}>✏️ Edit</button>
                         <button className="delete-btn" onClick={() => handleDeleteProduct(product._id)}>🗑️ Delete</button>

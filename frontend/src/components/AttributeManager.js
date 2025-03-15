@@ -1,128 +1,165 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/AttributeManager.css';
+import axios from 'axios';
+import { useNavigate } from "react-router-dom";
 
-function AttributeManager({ attributes, onUpdate }) {
+const host = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+
+const AttributeManager = () => {
+  const navigate = useNavigate();
+  const [attributes, setAttributes] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [editIndex, setEditIndex] = useState(null);
-  const [newAttribute, setNewAttribute] = useState({ name: '', type: 'short_text' });
+  const [editingAttribute, setEditingAttribute] = useState(null);
+  const [newAttribute, setNewAttribute] = useState({
+    name: "",
+    key: "",
+    description: "",
+    type: "short_text",
+    required: false,
+    options: [],
+    unit: "",
+    enrichment: { enabled: true, priority: 5, prompt: "" },
+    display: { showInList: true, order: 0 },
+  });
 
-  // Open Add/Edit Modal
-  const openModal = (index = null) => {
-    if (index !== null) {
-      setNewAttribute(attributes[index]);
-      setEditIndex(index);
-    } else {
-      setNewAttribute({ name: '', type: 'short_text' });
-      setEditIndex(null);
+  useEffect(() => {
+    fetchAttributes();
+  }, []);
+
+  const fetchAttributes = async () => {
+    try {
+      const response = await axios.get(`${host}/api/attributes`);
+      setAttributes(response.data);
+    } catch (error) {
+      console.error("Error fetching attributes:", error);
     }
+  };
+
+  // Handle form submission for add/edit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingAttribute) {
+        await axios.put(`${host}/api/attributes/${editingAttribute._id}`, newAttribute);
+      } else {
+        await axios.post(`${host}/api/attributes`, newAttribute);
+      }
+      setShowModal(false);
+      setEditingAttribute(null);
+      fetchAttributes();
+      setNewAttribute({
+        name: "",
+        description: "",
+        type: "short_text",
+        required: false,
+        unit: "",
+        display: { showInList: true, order: 0 }
+      })
+    } catch (error) {
+      console.error("Error saving attribute:", error);
+    }
+  };
+
+  // Handle Edit Attribute
+  const handleEdit = (attribute) => {
+    setEditingAttribute(attribute);
+    setNewAttribute(attribute);
     setShowModal(true);
   };
 
-  // Save or Update Attribute
-  const handleSaveAttribute = () => {
-    if (newAttribute.name.trim() === '') return;
-
-    let updatedAttributes = [...attributes];
-    if (editIndex !== null) {
-      updatedAttributes[editIndex] = newAttribute; // Update existing attribute
-    } else {
-      updatedAttributes.push(newAttribute); // Add new attribute
-    }
-
-    onUpdate(updatedAttributes);
-    setShowModal(false);
-    setNewAttribute({ name: '', type: 'short_text' });
-    setEditIndex(null);
-  };
-
-  // Delete Attribute
-  const handleDeleteAttribute = (index) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this attribute?');
-    if (confirmDelete) {
-      const updatedAttributes = attributes.filter((_, i) => i !== index);
-      onUpdate(updatedAttributes);
+  // Handle Delete Attribute
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this attribute?")) return;
+    try {
+      await axios.delete(`${host}/api/attributes/${id}`);
+      fetchAttributes();
+    } catch (error) {
+      console.error("Error deleting attribute:", error);
     }
   };
 
   return (
-    <div className="attribute-manager">
-      {/* Header Buttons */}
-      <div className="header-buttons">
-        <button className="back-btn" onClick={() => window.location.href = '/'}>← Back to Product List</button>
-        <button className="add-btn" onClick={() => openModal()}>+ Add Attribute</button>
-      </div>
+    <div className="attribute-container">
+      {/* Back Button */}
+      <button className="back-btn" onClick={() => navigate("/")}>←</button>
 
-      {/* Attributes Table */}
+      <h2>Manage Attributes</h2>
+
+      <button onClick={() => setShowModal(true)} className="add-btn">+ Add Attribute</button>
+
+      {/* Attribute Table */}
       <table className="attribute-table">
         <thead>
           <tr>
             <th>Name</th>
+            <th>Key</th>
             <th>Type</th>
+            <th>Required</th>
+            <th>Show in List</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {attributes.length > 0 ? (
-            attributes.map((attr, index) => (
-              <tr key={index}>
+            attributes.map((attr) => (
+              <tr key={attr._id}>
                 <td>{attr.name}</td>
-                <td>{attr.type.replace('_', ' ')}</td>
+                <td>{attr.key}</td>
+                <td>{attr.type.replace("_", " ")}</td>
+                <td>{attr.required ? "Yes" : "No"}</td>
+                <td>{attr.display.showInList ? "Yes" : "No"}</td>
                 <td>
-                  <button className="edit-btn" onClick={() => openModal(index)}>Edit</button>
-                  <button className="delete-btn" onClick={() => handleDeleteAttribute(index)}>Delete</button>
+                  <button onClick={() => handleEdit(attr)} className="edit-btn">Edit</button>
+                  <button onClick={() => handleDelete(attr._id)} className="delete-btn">Delete</button>
                 </td>
               </tr>
             ))
           ) : (
-            <tr>
-              <td colSpan="3" className="no-data">No attributes found</td>
-            </tr>
+            <tr><td colSpan="7">No attributes found.</td></tr>
           )}
         </tbody>
       </table>
 
-      {/* Modal Popup */}
+      {/* Add/Edit Modal */}
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <h3 className="modal-title">{editIndex !== null ? 'Edit Attribute' : 'Add Attribute'}</h3>
-
-            <div className="input-group">
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <h2>{editingAttribute ? "Edit Attribute" : "Add Attribute"}</h2>
+            <form onSubmit={handleSubmit}>
               <label>Name:</label>
-              <input
-                type="text"
-                value={newAttribute.name}
-                onChange={(e) => setNewAttribute({ ...newAttribute, name: e.target.value })}
-              />
-            </div>
+              <input type="text" value={newAttribute.name} onChange={(e) => setNewAttribute({ ...newAttribute, name: e.target.value })} required />
 
-            <div className="input-group">
+              <label>Description:</label>
+              <textarea value={newAttribute.description} onChange={(e) => setNewAttribute({ ...newAttribute, description: e.target.value })}></textarea>
+
               <label>Type:</label>
-              <select
-                value={newAttribute.type}
-                onChange={(e) => setNewAttribute({ ...newAttribute, type: e.target.value })}
-              >
+              <select value={newAttribute.type} onChange={(e) => setNewAttribute({ ...newAttribute, type: e.target.value })}>
                 <option value="short_text">Short Text</option>
                 <option value="long_text">Long Text</option>
-                <option value="rich_text">Rich Text (HTML)</option>
+                <option value="rich_text">Rich Text</option>
                 <option value="number">Number</option>
                 <option value="single_select">Single Select</option>
-                <option value="multiple_select">Multiple Select</option>
-                <option value="measure">Measure (Unit + Value)</option>
+                <option value="multi_select">Multi Select</option>
+                <option value="measure">Measure (Value + Unit)</option>
+                required
               </select>
-            </div>
 
-            <div className="modal-actions">
-              <button className="save-btn" onClick={handleSaveAttribute}>
-                {editIndex !== null ? 'Update' : 'Save'}
-              </button>
-              <button className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
-            </div>
+              <label>Required:</label>
+              <input type="checkbox" checked={newAttribute.required} onChange={(e) => setNewAttribute({ ...newAttribute, required: e.target.checked })} />
+
+              <label>Show in List:</label>
+              <input type="checkbox" checked={newAttribute.display.showInList} onChange={(e) => setNewAttribute({ ...newAttribute, display: { ...newAttribute.display, showInList: e.target.checked } })} />
+
+              <div className="popup-actions">
+                <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="save-btn">Save</button>
+              </div>
+            </form>
           </div>
         </div>
       )}
     </div>
   );
-}
+};
 
 export default AttributeManager;

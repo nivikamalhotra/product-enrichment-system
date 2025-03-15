@@ -74,6 +74,7 @@
   border-radius: 6px;
   padding: 16px;
   margin-bottom: 20px;
+  gap: 15px;
 }
 
 .filters-header {
@@ -133,9 +134,9 @@
 }
 
 .filter-field {
-  flex: 1;
-  min-width: 200px;
-  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
 }
 
 .filter-header {
@@ -167,10 +168,10 @@
 .filter-field input,
 .filter-field select {
   width: 100%;
-  padding: 8px 12px;
+  padding: 8px;
   border: 1px solid #dadce0;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 13px;
   outline: none;
 }
 
@@ -845,6 +846,15 @@
   border-radius: 4px;
   cursor: pointer;
   margin-left: 90%;
+}
+
+.import-back-btn {
+  background: #007bff;
+  color: white;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  margin-left: 10%;
 }
 
 .close-btn {
