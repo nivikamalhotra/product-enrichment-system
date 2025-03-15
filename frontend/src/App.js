@@ -78,29 +78,29 @@ function App() {
             <Route path="/" element={
               <>
                 <section className="product-section">
-                  <ProductList 
+                  <ProductList
                     products={products}
                     attributes={attributes}
                     onProductSelect={handleProductSelect}
                   />
                   {selectedProducts.length > 0 && (
-  <div className="enrichment-panel">
-    <button className="enrich-btn" onClick={handleEnrichWithAI} disabled={isLoading}>
-      {isLoading ? 'Enriching...' : 'Enrich with AI'}
-    </button>
-    {isLoading && <p>Loading...</p>}
-  </div>
-)}
+                    <div className="enrichment-panel">
+                      <button className="enrich-btn" onClick={handleEnrichWithAI} disabled={isLoading}>
+                        {isLoading ? 'Enriching...' : 'Enrich with AI'}
+                      </button>
+                      {isLoading && <p>Loading...</p>}
+                    </div>
+                  )}
                 </section>
               </>
             } />
-            
+
             <Route path="/import" element={
               <ImportData onImport={handleProductImport} fullPage={true} />
             } />
-            
+
             <Route path="/attributes" element={
-              <AttributeManager 
+              <AttributeManager
                 attributes={attributes}
                 onUpdate={handleAttributeUpdate}
                 onShowModal={() => setShowAttributeModal(true)}

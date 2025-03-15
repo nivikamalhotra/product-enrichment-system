@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProducts, enrichProductsWithAI } from '../services/api';
+import { fetchProducts, addProduct, deleteProduct } from '../services/api';
 
 function ProductList({ attributes, onProductSelect }) {
   const [products, setProducts] = useState([]);
@@ -17,6 +17,15 @@ function ProductList({ attributes, onProductSelect }) {
   const [activeFilters, setActiveFilters] = useState(['name', 'status', 'category']);
   const [showFilterSelector, setShowFilterSelector] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    brand: '',
+    barcode: '',
+    category: '',
+    price: ''
+  });
+  const [selectedCategory, setSelectedCategory] = useState("");
+
 
   useEffect(() => {
     loadProducts();
@@ -25,11 +34,11 @@ function ProductList({ attributes, onProductSelect }) {
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const data = await fetchProducts();
-      setProducts(data.products || []);
-      setFilteredProducts(data.products || []);
+      const queryParams = new URLSearchParams(filters).toString();
+      const data = await fetchProducts(queryParams);
+      setProducts(data.products);
     } catch (error) {
-      console.error("Failed to fetch products:", error);
+      console.error('Failed to fetch products:', error);
     } finally {
       setLoading(false);
     }
@@ -115,10 +124,10 @@ function ProductList({ attributes, onProductSelect }) {
     setSortDirection(direction);
   };
 
-  const handleFilterChange = (field, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [field]: value
+  const handleFilterChange = (key, value) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      [key]: value
     }));
   };
 
@@ -133,15 +142,60 @@ function ProductList({ attributes, onProductSelect }) {
     }
   };
 
-  const handleSelectProduct = (product, isSelected) => {
-    let updatedSelection;
-    if (isSelected) {
-      updatedSelection = [...selectedProducts, product];
-    } else {
-      updatedSelection = selectedProducts.filter(p => p.id !== product.id);
+  const handleSelectProduct = (productId, isChecked) => {
+    setSelectedProducts((prevSelected) => {
+      let updatedSelection;
+
+      if (isChecked) {
+        if (!prevSelected.includes(productId)) {  // **Avoid duplicate**
+          updatedSelection = [...prevSelected, productId];
+        } else {
+          updatedSelection = prevSelected; // **If already present, no change**
+        }
+      } else {
+        updatedSelection = prevSelected.filter(id => id !== productId); // **Remove product**
+      }
+
+      return updatedSelection;
+    });
+  };
+
+
+  const handleEditProduct = (product) => {
+    console.log("Edit Product:", product);
+    // TODO: Open Edit Modal or Navigate to Edit Page
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
+
+    try {
+      await deleteProduct(productId); // Call API
+      setProducts(prevProducts => prevProducts.filter(p => p._id !== productId)); // Remove from list
+      alert("Product deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete product:", error);
     }
-    setSelectedProducts(updatedSelection);
-    onProductSelect(updatedSelection);
+  };
+
+  const handleViewProduct = (product) => {
+    console.log("View Product:", product);
+    // TODO: Open a Modal or Navigate to Product Details Page
+  };
+
+
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Prevent page refresh
+
+    try {
+      const savedProduct = await addProduct(newProduct); // Call API to add product
+
+      setProducts((prevProducts) => [...prevProducts, savedProduct]); // Add new product to list dynamically
+      setShowAddProduct(false); // Close popup after adding
+      setNewProduct({ name: '', brand: '', barcode: '', category: '', price: '' }); // Reset form
+    } catch (error) {
+      console.error('Failed to add product:', error);
+    }
   };
 
   // Pagination calculations
@@ -199,13 +253,13 @@ function ProductList({ attributes, onProductSelect }) {
       const attributeKeys = attributes.map(attr => attr.key);
 
       // Call the enrichment API
-      const productIds = selectedProducts.map(p => p.id);
-      const enrichedProducts = await enrichProductsWithAI(productIds, attributeKeys);
+      const productIds = selectedProducts.map(p => p._id);
+      const enrichedProducts = {} //await enrichProductsWithAI(productIds, attributeKeys);
 
       // Update the products state with enriched data
       setProducts(prevProducts => {
         return prevProducts.map(product => {
-          const enriched = enrichedProducts.find(p => p.id === product.id);
+          const enriched = enrichedProducts.find(p => p._id === product._id);
           return enriched || product;
         });
       });
@@ -287,17 +341,42 @@ function ProductList({ attributes, onProductSelect }) {
         <div className="popup-overlay">
           <div className="popup-content">
             <h2>Add New Product</h2>
-            <form>
+            <form onSubmit={handleSubmit}>
               <label>Product Name</label>
-              <input type="text" name="name" required />
+              <input type="text" name="name" required
+                value={newProduct.name}
+                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+              />
+
               <label>Brand</label>
-              <input type="text" name="brand" required />
+              <input type="text" name="brand" required
+                value={newProduct.brand}
+                onChange={(e) => setNewProduct({ ...newProduct, brand: e.target.value })}
+              />
+
               <label>Barcode</label>
-              <input type="text" name="barcode" required />
+              <input type="text" name="barcode" required
+                value={newProduct.barcode}
+                onChange={(e) => setNewProduct({ ...newProduct, barcode: e.target.value })}
+              />
+
               <label>Category</label>
-              <input type="text" name="category" required />
+              <select
+                value={newProduct.category}  
+                onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })} 
+              >
+                <option value="">Select Category</option>
+                {categoryOptions.map((category, index) => (
+                  <option key={index} value={category}>{category}</option>
+                ))}
+              </select>
+
               <label>Price</label>
-              <input type="number" name="price" required />
+              <input type="number" name="price" required
+                value={newProduct.price}
+                onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+              />
+
               <div className="popup-actions">
                 <button type="button" className="cancel-btn" onClick={() => setShowAddProduct(false)}>Cancel</button>
                 <button type="submit" className="save-btn">Add Product</button>
@@ -306,6 +385,7 @@ function ProductList({ attributes, onProductSelect }) {
           </div>
         </div>
       )}
+
 
       {/* Filters */}
       {showFilters && (
@@ -495,11 +575,11 @@ function ProductList({ attributes, onProductSelect }) {
                   </tr>
                 ) : (
                   currentProducts.map(product => (
-                    <tr key={product.id} className={selectedProducts.some(p => p.id === product.id) ? 'selected' : ''}>
+                    <tr key={product._id} className={selectedProducts.some(p => p._id === product._id) ? 'selected' : ''}>
                       <td className="checkbox-column">
                         <input
                           type="checkbox"
-                          checked={selectedProducts.some(p => p.id === product.id)}
+                          checked={selectedProducts.includes(product)}
                           onChange={(e) => handleSelectProduct(product, e.target.checked)}
                         />
                       </td>
@@ -507,7 +587,7 @@ function ProductList({ attributes, onProductSelect }) {
                       <td>{product.brand}</td>
                       <td>
                         <span className={`status-badge status-${(product.status || '').toLowerCase()}`}>
-                          {product.status || 'N/A'}
+                          {product.status || 'Active'}
                         </span>
                       </td>
                       <td>{product.category || 'N/A'}</td>
@@ -518,10 +598,15 @@ function ProductList({ attributes, onProductSelect }) {
                       </td>
                       <td>{product.barcode}</td>
                       {attributes.map(attr => (
-                        <td key={`${product.id}-${attr.id || attr._id}`}>
+                        <td key={`${product._id}-${attr.id || attr._id}`}>
                           {renderAttributeValue(product[attr.key], attr.type)}
                         </td>
                       ))}
+                      <td>
+                        <button className="edit-btn" onClick={() => handleEditProduct(product)}>✏️ Edit</button>
+                        <button className="delete-btn" onClick={() => handleDeleteProduct(product._id)}>🗑️ Delete</button>
+                        <button className="view-btn" onClick={() => handleViewProduct(product)}>👁 View</button>
+                      </td>
                     </tr>
                   ))
                 )}
