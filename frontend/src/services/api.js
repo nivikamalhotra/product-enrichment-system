@@ -30,7 +30,6 @@ export const deleteProduct = async (id) => {
 };
 
 export const addProduct = async (productData) => {
-  console.log('API_URL:', API_URL);
   const response = await fetch(`${API_URL}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -125,16 +124,30 @@ export const deleteAttribute = async (attributeId) => {
 
 
 // Enrich products with AI
-export const enrichProductsWithAI = async (products) => {
-  const response = await fetch('/api/enrich', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ products }),
-  });
+export const enrichProductsWithAI = async (products, properties) => {
+  try {
+    const enrichedProducts = await Promise.all(products.map(async (product) => {
+      const propertyPrompts = properties.map(prop => `Fill the ${prop.name} (${prop.type}) for this product.`).join("\n");
 
-  if (!response.ok) {
-    throw new Error('Failed to enrich products');
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.REACT_APP_OPEN_AI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4",
+          messages: [{ role: "user", createAttribute}],
+        }),
+      });
+
+      const aiResponse = await response.json();
+      return { ...product, enrichedData: aiResponse.choices[0].message.content };
+    }));
+
+    return await enrichedProducts.json();
+  } catch (error) {
+    console.error('Enrichment error:', error);
+    throw error;
   }
-
-  return await response.json();
 };

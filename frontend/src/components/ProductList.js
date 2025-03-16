@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProducts, addProduct, deleteProduct } from '../services/api';
+import { fetchProducts, addProduct, deleteProduct, enrichProductsWithAI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 const host = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -45,7 +45,7 @@ function ProductList({ attributes, onProductSelect }) {
     ]);
   }, [attributes]);
 
-  const loadProducts = async (page = 1, limit = 10, sort = "createdAt", order = "desc")=> {
+  const loadProducts = async (page = 1, limit = 1000, sort = "createdAt", order = "desc") => {
     setLoading(true);
     try {
       const query = `page=${page}&limit=${limit}&sort=${sort}&order=${order}`;
@@ -243,9 +243,9 @@ function ProductList({ attributes, onProductSelect }) {
       const attributeKeys = attributes.map(attr => attr.key);
 
       // Call the enrichment API
-      const productIds = selectedProducts.map(p => p._id);
-      const enrichedProducts = {} //await enrichProductsWithAI(productIds, attributeKeys);
+      const enrichedProducts = await enrichProductsWithAI(selectedProducts, attributeKeys);
 
+      console.log('Enriched Products:', enrichedProducts);
       // Update the products state with enriched data
       setProducts(prevProducts => {
         return prevProducts.map(product => {
@@ -258,7 +258,7 @@ function ProductList({ attributes, onProductSelect }) {
       setSelectedProducts([]);
       onProductSelect([]);
 
-      alert(`Successfully enriched ${productIds.length} products`);
+      alert(`Successfully enriched ${selectedProducts.length} products`);
     } catch (error) {
       console.error('Enrichment failed:', error);
       alert(`Enrichment failed: ${error.message}`);
@@ -385,7 +385,7 @@ function ProductList({ attributes, onProductSelect }) {
               <div className="filter-selector-wrapper">
                 <button className="add-filter-btn" onClick={toggleFilterSelector}>
                   + Add Filter
-            </button>
+                </button>
                 {showFilterSelector && (
                   <div className="filter-selector-dropdown">
                     {getRemainingFilters().length > 0 ? (
@@ -414,12 +414,12 @@ function ProductList({ attributes, onProductSelect }) {
               <div key={filter} className="filter-field">
                 <div className="filter-header">
                   <label>{getFilterLabel(filter)}</label>
-            <button
+                  <button
                     className="remove-filter-btn"
                     onClick={() => removeFilter(filter)}
-            >
+                  >
                     &times;
-            </button>
+                  </button>
                 </div>
                 {filter === 'status' ? (
                   <select
@@ -449,7 +449,7 @@ function ProductList({ attributes, onProductSelect }) {
                     <option value="">All Statuses</option>
                     {enrichmentStatusOptions.map(status => (
                       <option key={status} value={status}>{status}</option>
-            ))}
+                    ))}
                   </select>
                 ) : filter === 'createdAt' ? (
                   <input
@@ -635,31 +635,9 @@ function ProductList({ attributes, onProductSelect }) {
                 Previous
               </button>
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                const pageNum = currentPage > 3 ?
-                  Math.min(currentPage - 3 + i + 1, totalPages) :
-                  i + 1;
-
-                return pageNum <= totalPages ? (
-                  <button
-                    key={pageNum}
-                    onClick={() => paginate(pageNum)}
-                    className={currentPage === pageNum ? 'pagination-btn active' : 'pagination-btn'}
-                  >
-                    {pageNum}
-                  </button>
-                ) : null;
-              })}
-              {totalPages > 5 && currentPage < totalPages - 2 && (
-                <span className="pagination-ellipsis">...</span>
-              )}
-              {totalPages > 5 && currentPage < totalPages - 1 && (
-                <button
-                  onClick={() => paginate(totalPages)}
-                  className={currentPage === totalPages ? 'pagination-btn active' : 'pagination-btn'}
-                >
-                  {totalPages}
-                </button>
-              )}
+                let pageNum;
+                if (currentPage <= 3) { pageNum = i + 1; } else if (currentPage >= totalPages - 2) { pageNum = totalPages - 4 + i; } else { pageNum = currentPage - 2 + i; } return pageNum <= totalPages && pageNum > 0 ? (<button key={pageNum} onClick={() => paginate(pageNum)} className={currentPage === pageNum ? "pagination-btn active" : "pagination-btn"} > {pageNum} </button>) : null;
+              })} {totalPages > 5 && currentPage < totalPages - 2 && (<span className="pagination-ellipsis">...</span>)} {totalPages > 5 && currentPage < totalPages - 2 && (<button onClick={() => paginate(totalPages)} className={currentPage === totalPages ? "pagination-btn active" : "pagination-btn"} > {totalPages} </button>)}
               <button
                 onClick={() => paginate(currentPage + 1)}
                 disabled={currentPage === totalPages}
