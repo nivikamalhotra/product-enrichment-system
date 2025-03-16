@@ -54,7 +54,7 @@ function ImportData({ onImport }) {
       }
       
       setSuccess(`Successfully imported ${importedProducts.length} products.`);
-      onImport(importedProducts);
+      onImport((prevProducts) => [...prevProducts, ...importedProducts]);
       setFile(null);
 
       // Reset file input
