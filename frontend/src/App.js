@@ -15,7 +15,7 @@ function App() {
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showAttributeModal, setShowAttributeModal] = useState(false);
-
+ 
   useEffect(() => {
     const loadAttributes = async () => {
       try {
@@ -48,29 +48,6 @@ function App() {
     setAttributes(updatedAttributes);
   };
 
-  const handleProductEnrichment = (enrichedProducts) => {
-    setProducts(prevProducts => {
-      return prevProducts.map(product => {
-        const enriched = enrichedProducts.find(p => p.id === product.id);
-        return enriched || product;
-      });
-    });
-    setSelectedProducts([]);
-  };
-
-  // New function: Handle AI enrichment
-  const handleEnrichWithAI = async () => {
-    try {
-      setIsLoading(true);
-      const enrichedProducts = await enrichProductsWithAI(selectedProducts);
-      handleProductEnrichment(enrichedProducts);
-    } catch (error) {
-      console.error('Error enriching products:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <Router>
       <div className="app">
@@ -85,14 +62,6 @@ function App() {
                     attributes={attributes}
                     onProductSelect={handleProductSelect}
                   />
-                  {selectedProducts.length > 0 && (
-                    <div className="enrichment-panel">
-                      <button className="enrich-btn" onClick={handleEnrichWithAI} disabled={isLoading}>
-                        {isLoading ? 'Enriching...' : 'Enrich with AI'}
-                      </button>
-                      {isLoading && <p>Loading...</p>}
-                    </div>
-                  )}
                 </section>
               </>
             } />
