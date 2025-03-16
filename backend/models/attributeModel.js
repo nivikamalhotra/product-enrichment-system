@@ -54,19 +54,7 @@ const AttributeSchema = new Schema({
     showInList: {
       type: Boolean,
       default: true
-    },
-    order: {
-      type: Number,
-      default: 0
     }
-  },
-  // Validation
-  validation: {
-    minLength: Number,
-    maxLength: Number,
-    min: Number,
-    max: Number,
-    regex: String
   }
 }, { 
   timestamps: true 

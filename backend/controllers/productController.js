@@ -36,20 +36,18 @@ router.get('/', async (req, res) => {
 router.post('/import', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-
     const data = parseFile(req.file.path);
     if (!data.length) return res.status(400).json({ error: 'File contains no data' });
 
     const products = data.map(item => ({
-      name: item.name || '',
-      brand: item.brand || '',
-      barcode: item.barcode || '',
-      images: item.images ? item.images.split(',').map(img => img.trim()) : [],
-      attributes: {}
+      name: item.Name || '',
+      brand: item.Brand || '',
+      barcode: item.Barcode || '',
+      images: item.Image ? item.Image.split(',').map(img => img.trim()) : []
     }));
 
     const result = await Product.insertMany(products);
-    res.status(201).json({ message: `Imported ${result.length} products`, count: result.length });
+    res.status(201).json(result);
   } catch (error) {
     res.status(500).json({ error: 'Failed to import products' });
   }

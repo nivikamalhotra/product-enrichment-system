@@ -16,7 +16,7 @@ function ProductList({ attributes, onProductSelect }) {
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [enriching, setEnriching] = useState(false);
-  const [availableFilters] = useState(['name', 'brand', 'barcode', 'status', 'category', 'createdAt', 'enrichmentStatus']);
+  const [availableFilters, setAvailableFilters] = useState([]);
   const [activeFilters, setActiveFilters] = useState(['name', 'status', 'category']);
   const [showFilterSelector, setShowFilterSelector] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
@@ -32,12 +32,27 @@ function ProductList({ attributes, onProductSelect }) {
     loadProducts();
   }, []);
 
-  const loadProducts = async () => {
+  useEffect(() => {
+    setAvailableFilters([
+      'name',
+      'brand',
+      'barcode',
+      'status',
+      'category',
+      'price',
+      'enrichmentStatus',
+      ...attributes.map(attr => attr.key)
+    ]);
+  }, [attributes]);
+
+  const loadProducts = async (page = 1, limit = 10, sort = "createdAt", order = "desc")=> {
     setLoading(true);
     try {
-      const queryParams = new URLSearchParams(filters).toString();
-      const data = await fetchProducts(queryParams);
-      setProducts(data.products);
+      const query = `page=${page}&limit=${limit}&sort=${sort}&order=${order}`;
+      const response = await fetchProducts(query);
+      setProducts(response.products);
+      setFilteredProducts(response.products);
+      setCurrentPage(Number(page));
     } catch (error) {
       console.error('Failed to fetch products:', error);
     } finally {
@@ -47,8 +62,8 @@ function ProductList({ attributes, onProductSelect }) {
 
   useEffect(() => {
     applyFiltersAndSort();
+    setCurrentPage(1);
   }, [filters, sortField, sortDirection, products]);
-
   const applyFiltersAndSort = () => {
     let result = [...products];
 
@@ -56,7 +71,8 @@ function ProductList({ attributes, onProductSelect }) {
     Object.keys(filters).forEach(key => {
       if (filters[key]) {
         result = result.filter(product => {
-          const value = product[key];
+          const value = product[key] || (product.attributes && product.attributes[key]);
+
           if (value === null || value === undefined) return false;
 
           // Handle different attribute types
@@ -65,20 +81,9 @@ function ProductList({ attributes, onProductSelect }) {
           } else if (typeof value === 'number') {
             return value.toString().includes(filters[key]);
           } else if (Array.isArray(value)) {
-            return value.some(item =>
-              typeof item === 'string' && item.toLowerCase().includes(filters[key].toLowerCase())
-            );
+            return value.some(item => item.toLowerCase().includes(filters[key].toLowerCase()));
           } else if (typeof value === 'object' && value !== null) {
-            // For measure type with unit and value
-            if (value.value !== undefined && value.unit !== undefined) {
-              return value.value.toString().includes(filters[key]) ||
-                value.unit.toLowerCase().includes(filters[key].toLowerCase());
-            }
-            // For date objects
-            if (value instanceof Date) {
-              const dateStr = value.toISOString().split('T')[0];
-              return dateStr.includes(filters[key]);
-            }
+            return value.value ? value.value.toString().includes(filters[key]) : false;
           }
           return false;
         });
@@ -88,29 +93,13 @@ function ProductList({ attributes, onProductSelect }) {
     // Apply sorting
     if (sortField) {
       result.sort((a, b) => {
-        let valueA = a[sortField] || '';
-        let valueB = b[sortField] || '';
+        let valueA = a[sortField] || (a.attributes && a.attributes[sortField]);
+        let valueB = b[sortField] || (b.attributes && b.attributes[sortField]);
 
-        // Handle different types
         if (typeof valueA === 'string' && typeof valueB === 'string') {
-          return sortDirection === 'asc'
-            ? valueA.localeCompare(valueB)
-            : valueB.localeCompare(valueA);
+          return sortDirection === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
         } else if (typeof valueA === 'number' && typeof valueB === 'number') {
           return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
-        } else if (typeof valueA === 'object' && typeof valueB === 'object') {
-          // For measure type
-          if (valueA?.value !== undefined && valueB?.value !== undefined) {
-            const numA = parseFloat(valueA.value);
-            const numB = parseFloat(valueB.value);
-            return sortDirection === 'asc' ? numA - numB : numB - numA;
-          }
-          // For dates
-          if (valueA instanceof Date && valueB instanceof Date) {
-            return sortDirection === 'asc'
-              ? valueA.getTime() - valueB.getTime()
-              : valueB.getTime() - valueA.getTime();
-          }
         }
         return 0;
       });
@@ -118,6 +107,7 @@ function ProductList({ attributes, onProductSelect }) {
 
     setFilteredProducts(result);
   };
+
 
   const handleSort = (field) => {
     const direction = field === sortField && sortDirection === 'asc' ? 'desc' : 'asc';
@@ -188,11 +178,13 @@ function ProductList({ attributes, onProductSelect }) {
   };
 
   // Pagination calculations
-  const indexOfLastProduct = currentPage * itemsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
   const getCurrentPageProducts = () => {
+    const indexOfLastProduct = currentPage * itemsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
+
     return filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
   };
+
   const currentProducts = getCurrentPageProducts();
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
@@ -227,7 +219,16 @@ function ProductList({ attributes, onProductSelect }) {
   };
 
   const getRemainingFilters = () => {
-    return availableFilters.filter(filter => !activeFilters.includes(filter));
+    return [
+      'name',
+      'brand',
+      'barcode',
+      'status',
+      'category',
+      'price',
+      'enrichmentStatus',
+      ...attributes.map(attr => attr.key)
+    ].filter((filter) => !activeFilters.includes(filter));
   };
 
   const handleEnrichProducts = async () => {
@@ -384,7 +385,7 @@ function ProductList({ attributes, onProductSelect }) {
               <div className="filter-selector-wrapper">
                 <button className="add-filter-btn" onClick={toggleFilterSelector}>
                   + Add Filter
-                </button>
+            </button>
                 {showFilterSelector && (
                   <div className="filter-selector-dropdown">
                     {getRemainingFilters().length > 0 ? (
@@ -413,12 +414,12 @@ function ProductList({ attributes, onProductSelect }) {
               <div key={filter} className="filter-field">
                 <div className="filter-header">
                   <label>{getFilterLabel(filter)}</label>
-                  <button
+            <button
                     className="remove-filter-btn"
                     onClick={() => removeFilter(filter)}
-                  >
+            >
                     &times;
-                  </button>
+            </button>
                 </div>
                 {filter === 'status' ? (
                   <select
@@ -448,7 +449,7 @@ function ProductList({ attributes, onProductSelect }) {
                     <option value="">All Statuses</option>
                     {enrichmentStatusOptions.map(status => (
                       <option key={status} value={status}>{status}</option>
-                    ))}
+            ))}
                   </select>
                 ) : filter === 'createdAt' ? (
                   <input
@@ -550,7 +551,7 @@ function ProductList({ attributes, onProductSelect }) {
                       <span className="sort-icon">{sortDirection === 'asc' ? '▲' : '▼'}</span>
                     )}
                   </th>
-                  {attributes.map(attr => (
+                  {/* {attributes.map(attr => (
                     <th
                       key={attr.id || attr._id}
                       onClick={() => handleSort(attr.key)}
@@ -561,7 +562,7 @@ function ProductList({ attributes, onProductSelect }) {
                         <span className="sort-icon">{sortDirection === 'asc' ? '▲' : '▼'}</span>
                       )}
                     </th>
-                  ))}
+                  ))} */}
                 </tr>
               </thead>
               <tbody>
@@ -606,11 +607,11 @@ function ProductList({ attributes, onProductSelect }) {
                         </span>
                       </td>
                       <td>{product.barcode}</td>
-                      {attributes.map(attr => (
+                      {/* {attributes.map(attr => (
                         <td key={`${product._id}-${attr.id || attr._id}`}>
                           {renderAttributeValue(product[attr.key], attr.type)}
                         </td>
-                      ))}
+                      ))} */}
                       <td>
                         <button className="edit-btn" onClick={() => navigate(`/edit-product/${product._id}`)}>✏️ Edit</button>
                         <button className="delete-btn" onClick={() => handleDeleteProduct(product._id)}>🗑️ Delete</button>

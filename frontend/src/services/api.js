@@ -3,7 +3,6 @@ const API_BASE_URL = `${process.env.REACT_APP_API_URL}/api` || 'http://localhost
 
 
 export const fetchProducts = async (queryParams = '') => {
-  console.log('API_URL:', API_URL);
   const response = await fetch(`${API_URL}?${queryParams}`);
   if (!response.ok) throw new Error('Failed to fetch products');
   return response.json();
