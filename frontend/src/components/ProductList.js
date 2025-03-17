@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProducts, addProduct, deleteProduct, enrichProductsWithAI } from '../services/api';
+import EnrichmentPanel from './EnrichmentPanel';
+import { fetchProducts, addProduct, deleteProduct } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 const host = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -15,7 +16,6 @@ function ProductList({ attributes, onProductSelect }) {
   const [filters, setFilters] = useState({});
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [enriching, setEnriching] = useState(false);
   const [availableFilters, setAvailableFilters] = useState([]);
   const [activeFilters, setActiveFilters] = useState(['name', 'status', 'category']);
   const [showFilterSelector, setShowFilterSelector] = useState(false);
@@ -231,42 +231,6 @@ function ProductList({ attributes, onProductSelect }) {
     ].filter((filter) => !activeFilters.includes(filter));
   };
 
-  const handleEnrichProducts = async () => {
-    if (selectedProducts.length === 0) {
-      alert('Please select products to enrich');
-      return;
-    }
-
-    setEnriching(true);
-    try {
-      // Get all attribute keys that we want to enrich
-      const attributeKeys = attributes.map(attr => attr.key);
-
-      // Call the enrichment API
-      const enrichedProducts = await enrichProductsWithAI(selectedProducts, attributeKeys);
-
-      console.log('Enriched Products:', enrichedProducts);
-      // Update the products state with enriched data
-      setProducts(prevProducts => {
-        return prevProducts.map(product => {
-          const enriched = enrichedProducts.find(p => p._id === product._id);
-          return enriched || product;
-        });
-      });
-
-      // Clear selection after enrichment
-      setSelectedProducts([]);
-      onProductSelect([]);
-
-      alert(`Successfully enriched ${selectedProducts.length} products`);
-    } catch (error) {
-      console.error('Enrichment failed:', error);
-      alert(`Enrichment failed: ${error.message}`);
-    } finally {
-      setEnriching(false);
-    }
-  };
-
   const getFilterLabel = (filterKey) => {
     const labels = {
       name: 'Product Name',
@@ -315,13 +279,6 @@ function ProductList({ attributes, onProductSelect }) {
             onClick={loadProducts}
           >
             Refresh
-          </button>
-          <button
-            className="action-btn enrich-btn"
-            onClick={handleEnrichProducts}
-            disabled={selectedProducts.length === 0 || enriching}
-          >
-            {enriching ? 'Enriching...' : 'Enrich with AI'}
           </button>
         </div>
       </div>
@@ -471,6 +428,22 @@ function ProductList({ attributes, onProductSelect }) {
         </div>
       )}
 
+      <EnrichmentPanel
+        selectedProducts={selectedProducts}
+        attributes={attributes}
+        onEnrich={(enrichedProducts) => {
+          setProducts(prevProducts =>
+            prevProducts.map(product => {
+              const enriched = enrichedProducts.find(p => p._id === product._id);
+              return enriched ? { ...product, ...enriched } : product;
+            })
+          );
+
+          setSelectedProducts([]); // Clear selection after enrichment
+        }}
+      />
+
+
       {/* Table */}
       {loading ? (
         <div className="loading">Loading products...</div>
@@ -551,18 +524,11 @@ function ProductList({ attributes, onProductSelect }) {
                       <span className="sort-icon">{sortDirection === 'asc' ? '▲' : '▼'}</span>
                     )}
                   </th>
-                  {/* {attributes.map(attr => (
-                    <th
-                      key={attr.id || attr._id}
-                      onClick={() => handleSort(attr.key)}
-                      className={sortField === attr.key ? `sort-${sortDirection}` : ''}
-                    >
-                      {attr.name}
-                      {sortField === attr.key && (
-                        <span className="sort-icon">{sortDirection === 'asc' ? '▲' : '▼'}</span>
-                      )}
-                    </th>
-                  ))} */}
+                  {attributes
+                    .filter(attr => filteredProducts.some(product => product.attributes?.[attr.key])) // Show only enriched attributes
+                    .map(attr => (
+                      <th key={attr.key}>{attr.name}</th>
+                    ))}
                 </tr>
               </thead>
               <tbody>
@@ -607,11 +573,11 @@ function ProductList({ attributes, onProductSelect }) {
                         </span>
                       </td>
                       <td>{product.barcode}</td>
-                      {/* {attributes.map(attr => (
-                        <td key={`${product._id}-${attr.id || attr._id}`}>
-                          {renderAttributeValue(product[attr.key], attr.type)}
-                        </td>
-                      ))} */}
+                      {attributes
+                        .filter(attr => product.attributes?.[attr.key]) // Only display enriched attributes
+                        .map(attr => (
+                          <td key={attr.key}>{product.attributes[attr.key] || '-'}</td>
+                        ))}
                       <td>
                         <button className="edit-btn" onClick={() => navigate(`/edit-product/${product._id}`)}>✏️ Edit</button>
                         <button className="delete-btn" onClick={() => handleDeleteProduct(product._id)}>🗑️ Delete</button>

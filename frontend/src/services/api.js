@@ -69,11 +69,11 @@ export const createAttribute = async (attributeData) => {
       },
       body: JSON.stringify(attributeData),
     });
-    
+
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Error creating attribute:', error);
@@ -91,11 +91,11 @@ export const updateAttribute = async (attributeId, attributeData) => {
       },
       body: JSON.stringify(attributeData),
     });
-    
+
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Error updating attribute:', error);
@@ -109,11 +109,11 @@ export const deleteAttribute = async (attributeId) => {
     const response = await fetch(`${API_BASE_URL}/attributes/${attributeId}`, {
       method: 'DELETE',
     });
-    
+
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
-    
+
     return true;
   } catch (error) {
     console.error('Error deleting attribute:', error);
@@ -124,28 +124,45 @@ export const deleteAttribute = async (attributeId) => {
 
 
 // Enrich products with AI
-export const enrichProductsWithAI = async (products, properties) => {
+export const enrichProductsWithAI = async (selectedProducts) => {
   try {
-    const enrichedProducts = await Promise.all(products.map(async (product) => {
-      const propertyPrompts = properties.map(prop => `Fill the ${prop.name} (${prop.type}) for this product.`).join("\n");
-
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${process.env.REACT_APP_OPEN_AI_API_KEY}`,
-          "Content-Type": "application/json",
+    try {
+      const response = await fetch(`${API_BASE_URL}/enrichment`, {
+        method: 'POST', headers: {
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          model: "gpt-4",
-          messages: [{ role: "user", createAttribute}],
-        }),
+        body: JSON.stringify(selectedProducts),
       });
 
-      const aiResponse = await response.json();
-      return { ...product, enrichedData: aiResponse.choices[0].message.content };
-    }));
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
 
-    return await enrichedProducts.json();
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating attribute:', error);
+      throw error;
+    }
+
+    // // // const product = await Promise.all(products.map(async (product) => {
+    // // //   const propertyPrompts = properties.map(prop => `Fill the ${prop.name} (${prop.type}) for this product.`).join("\n");
+    // // //   const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // // //     method: "POST",
+    // // //     headers: {
+    // // //       "Authorization": `Bearer ${process.env.REACT_APP_OPEN_AI_API_KEY}`,
+    // // //       "Content-Type": "application/json",
+    // // //     },
+    // // //     body: JSON.stringify({
+    // // //       model: "gpt-4",
+    // // //       messages: [{ role: "user", createAttribute }],
+    // // //     }),
+    // // //   });
+
+    // // //   const aiResponse = await response.json();
+    // // //   return { ...product, enrichedData: aiResponse.choices[0].message.content };
+    // // }));
+
+    // return await product.json();
   } catch (error) {
     console.error('Enrichment error:', error);
     throw error;

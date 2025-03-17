@@ -1,12 +1,5 @@
-const { OpenAI } = require('openai');
 const { Anthropic } = require('@anthropic-ai/sdk');
-const axios = require('axios');
 const Product = require('../models/productModel');
-
-// Initialize AI clients
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY
@@ -144,99 +137,25 @@ For multiple select attributes, provide values separated by commas.
 };
 
 // Function to call OpenAI API
-const callOpenAI = async (systemPrompt, userPrompt) => {
+const callClaudeAI = async (prompt) => {
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      temperature: 0.3,
-      response_format: { type: 'json_object' }
-    });
-    
-    return JSON.parse(response.choices[0].message.content);
-  } catch (error) {
-    console.error('OpenAI API error:', error);
-    throw new Error(`OpenAI API error: ${error.message}`);
-  }
-};
-
-// Function to call Anthropic Claude API
-const callClaude = async (systemPrompt, userPrompt) => {
-  try {
+    console.log('Calling AI with prompt:', prompt);
     const response = await anthropic.messages.create({
-      model: 'claude-3-opus-20240229',
-      system: systemPrompt,
+      model: "claude-3-opus-20240229",
+      max_tokens: 1024,
+      temperature: 0.7,
       messages: [
-        { role: 'user', content: userPrompt }
-      ],
-      temperature: 0.3,
-      max_tokens: 4000
+        { role: "user", content: prompt }
+      ]
     });
-    
-    // Parse JSON from the response
-    // Claude might wrap the JSON in markdown code blocks, so we need to extract it
-    const content = response.content[0].text;
-    const jsonMatch = content.match(/```(?:json)?\s*({[\s\S]*?})\s*```/) || 
-                     content.match(/({[\s\S]*?})/);
-    
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[1]);
-    } else {
-      throw new Error('Unable to parse JSON from Claude response');
-    }
+
+    return response.content[0].text; // Extract the AI response
   } catch (error) {
-    console.error('Claude API error:', error);
-    throw new Error(`Claude API error: ${error.message}`);
+    console.error("AI Error:", error);
+    throw new Error("Failed to get response from AI");
   }
 };
 
-// Fallback to a simple product lookup API if AI services fail
-const fallbackEnrichment = async (product) => {
-  try {
-    // Try to lookup product by barcode if available
-    if (product.barcode) {
-      const response = await axios.get(`https://world.openfoodfacts.org/api/v0/product/${product.barcode}.json`);
-      
-      if (response.data && response.data.status === 1) {
-        const productData = response.data.product;
-        
-        return {
-          description: productData.product_name_en || productData.generic_name_en || '',
-          categories: productData.categories || '',
-          ingredients: productData.ingredients_text_en || '',
-          nutritional_info: productData.nutriments ? JSON.stringify(productData.nutriments) : '',
-          weight_or_volume: `${productData.quantity || ''} ${productData.quantity_unit || ''}`.trim(),
-          country_of_origin: productData.countries_en || ''
-        };
-      }
-    }
-    
-    // If no barcode match, try searching by name
-    const searchTerm = encodeURIComponent(product.name);
-    const response = await axios.get(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${searchTerm}&json=1`);
-    
-    if (response.data && response.data.products && response.data.products.length > 0) {
-      const productData = response.data.products[0];
-      
-      return {
-        description: productData.product_name_en || productData.generic_name_en || '',
-        categories: productData.categories || '',
-        ingredients: productData.ingredients_text_en || '',
-        nutritional_info: productData.nutriments ? JSON.stringify(productData.nutriments) : '',
-        weight_or_volume: `${productData.quantity || ''} ${productData.quantity_unit || ''}`.trim(),
-        country_of_origin: productData.countries_en || ''
-      };
-    }
-    
-    return {}; // Return empty object if no match found
-  } catch (error) {
-    console.error('Fallback enrichment error:', error);
-    return {}; // Return empty object on error
-  }
-};
 
 // Main function to enrich a product
 const enrichProduct = async (product, attributes) => {
@@ -256,15 +175,7 @@ const enrichProduct = async (product, attributes) => {
     // Try to get a response from AI with retries
     while (retryCount <= maxRetries) {
       try {
-        if (useClaudeOpus && process.env.ANTHROPIC_API_KEY) {
-          aiResponse = await callClaude(systemPrompt, userPrompt);
-        } else if (process.env.OPENAI_API_KEY) {
-          aiResponse = await callOpenAI(systemPrompt, userPrompt);
-        } else {
-          // If no API keys are configured, use fallback
-          aiResponse = await fallbackEnrichment(product);
-        }
-        
+        aiResponse = await callClaudeAI(systemPrompt, userPrompt);
         break; // Break out of retry loop if successful
       } catch (error) {
         console.error(`AI API error (attempt ${retryCount + 1}):`, error);
