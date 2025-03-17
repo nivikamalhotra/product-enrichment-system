@@ -1,12 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-// Dynamic field schema for attributes
-const DynamicFieldSchema = new Schema({
-  value: Schema.Types.Mixed,
-  unit: String
-}, { _id: false });
-
 // Product Schema
 const ProductSchema = new Schema({
   name: { type: String, required: true, index: true },
@@ -23,7 +17,7 @@ const ProductSchema = new Schema({
   },
   price: { type: Number },
   images: [{ type: String }],
-  attributes: { type: Map, of: DynamicFieldSchema, default: {} },
+  attributes: { type: Map, of: String },
   importBatch: { type: String, index: true },
   importDate: { type: Date, default: Date.now },
   lastEnriched: { type: Date },

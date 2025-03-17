@@ -5,10 +5,10 @@ const Attribute = require('../models/attributeModel');
 const aiService = require('../services/aiService');
 
 // Enrich selected products
-router.post('/enrich', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const { productIds } = req.body;
-    
+    const productIds = req.body.map((product) => product._id);
+
     if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
       return res.status(400).json({ error: 'No product IDs provided' });
     }
@@ -23,7 +23,6 @@ router.post('/enrich', async (req, res) => {
         } 
       }
     );
-    
     // Initialize enrichment process
     // For large batches, this would be queued in a job system
     // This implementation processes up to 5 products immediately and queues the rest
@@ -85,7 +84,7 @@ router.post('/enrich', async (req, res) => {
         } catch (error) {
           console.error('Error in background enrichment job:', error);
         }
-      }, 100); // Start after 100ms to not block the response
+      }, 100);
     }
     
     res.json({

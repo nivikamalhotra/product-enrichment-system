@@ -1,28 +1,38 @@
 import React, { useState } from 'react';
 import { enrichProductsWithAI } from '../services/api';
 
-const EnrichmentPanel = ({ selectedProducts, attributes, onEnrich }) => {
+const EnrichmentPanel = ({ selectedProducts, onEnrich }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleEnrich = async () => {
+    if (selectedProducts.length === 0) {
+      alert('Please select products to enrich.');
+      return;
+    }
+
     setIsLoading(true);
     try {
+      // const attributeKeys = attributes.map(attr => attr.key);
       const enrichedProducts = await enrichProductsWithAI(selectedProducts);
-      onEnrich(enrichedProducts);
+
+      if (!Array.isArray(enrichedProducts) || enrichedProducts.length === 0) {
+        throw new Error("No products were enriched.");
+      }
+
+      onEnrich(enrichedProducts); // Send enriched data to ProductList.js
+      alert(`Successfully enriched ${enrichedProducts.length} products`);
     } catch (error) {
       console.error('Error enriching products:', error);
+      alert(`Enrichment failed: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="enrichment-panel">
-      <h3>AI Enrichment</h3>
-      <button onClick={handleEnrich} disabled={isLoading}>
-        {isLoading ? 'Enriching...' : 'Enrich Now'}
-      </button>
-    </div>
+    <button  className="primary-btn" onClick={handleEnrich} disabled={isLoading || selectedProducts.length === 0}>
+    {isLoading ? 'Enriching...' : 'Enrich Now'}
+  </button>
   );
 };
 
